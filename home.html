@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Smart Job Hunting</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap');
+
+    body {
+      font-family: 'Orbitron', sans-serif;
+      background-color: #0a0a0a;
+      color: #00ffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      overflow: hidden;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 10px;
+      text-shadow: 0 0 15px #00ffff, 0 0 30px #00ffff55;
+    }
+
+    .subtitle {
+      color: #88f9ff;
+      font-size: 1.2rem;
+      margin-bottom: 25px;
+      text-shadow: 0 0 10px #00ffff88;
+    }
+
+    .robot-img {
+      width: 200px;
+      margin-bottom: 30px;
+      border-radius: 15px;
+      box-shadow: 0 0 25px #00ffff88, 0 0 60px #00ffff44;
+    }
+
+    p {
+      color: #88f9ff;
+      font-size: 1.3rem;
+      margin-bottom: 30px;
+    }
+
+    .button-container {
+      display: flex;
+      gap: 30px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    a {
+      text-decoration: none;
+    }
+
+    button {
+      padding: 15px 30px;
+      font-size: 1.1rem;
+      color: #0a0a0a;
+      background-color: #00ffff;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 15px #00ffff, 0 0 40px #00ffff66;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background-color: #00cccc;
+      transform: scale(1.05);
+      box-shadow: 0 0 25px #00ffffaa, 0 0 50px #00ffff88;
+    }
+  </style>
+</head>
+<body>
+  <h1>Welcome to Smart Job Hunting</h1>
+  <div class="subtitle">Your AI-powered job board</div>
+
+  <img class="robot-img" src="https://cdn.pixabay.com/photo/2023/03/23/16/04/robot-7872217_1280.png" alt="AI Recruiter Robot" />
+
+  <p>Choose your role to continue:</p>
+  <div class="button-container">
+    <a href="/home_employee.html"><button>I'm an Employee</button></a>
+    <a href="/home_employer.html"><button>I'm an Employer</button></a>
+  </div>
+</body>
+</html>
