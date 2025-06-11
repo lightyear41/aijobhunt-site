@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Employer Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #c3ecb2, #7ddaff);
+      margin: 0;
+      padding: 40px 20px;
+      color: #333;
+    }
+
+    .container {
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      max-width: 700px;
+      margin: auto;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      text-align: center;
+      color: #2b5876;
+    }
+
+    label {
+      display: block;
+      margin-top: 20px;
+      font-weight: bold;
+    }
+
+    input[type="number"], select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 8px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+
+    button {
+      display: block;
+      margin-top: 25px;
+      padding: 12px 20px;
+      font-size: 16px;
+      background-color: #2b5876;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      width: 100%;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover:not(:disabled) {
+      background-color: #214b67;
+    }
+
+    button:disabled {
+      background-color: #999;
+      cursor: not-allowed;
+    }
+
+    #errorMsg {
+      color: red;
+      margin-top: 15px;
+      text-align: center;
+    }
+
+    #loadingMsg {
+      color: #2b5876;
+      margin-top: 15px;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    #matchesList {
+      margin-top: 30px;
+    }
+
+    .match {
+      background: #f4f4f4;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      border-left: 5px solid #2b5876;
+    }
+
+    .match button.download-btn {
+      margin-top: 15px;
+      background-color: #4caf50;
+      width: auto;
+      padding: 8px 16px;
+      font-size: 14px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      color: white;
+      transition: background-color 0.3s ease;
+    }
+
+    .match button.download-btn:hover {
+      background-color: #3e8e41;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 50px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    footer a {
+      color: #2b5876;
+      text-decoration: none;
+    }
+
+    @media (max-width: 500px) {
+      .container {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Employer Dashboard</h1>
+
+    <label for="jobSelect">Select Job Post:</label>
+    <select id="jobSelect">
+      <option value="">Loading job posts...</option>
+    </select>
+
+    <label for="minScore">Minimum Match Score (%)</label>
+    <input type="number" id="minScore" name="minScore" min="0" max="100" value="90" placeholder="e.g. 90" />
+
+    <label for="maxDistance">Maximum Distance (miles):</label>
+    <input type="number" id="maxDistance" name="maxDistance" min="1" value="25" placeholder="e.g. 25" />
+
+    <button id="startButton" disabled>Start Auto-List</button>
+
+    <p id="errorMsg"></p>
+    <p id="loadingMsg"></p>
+    <div id="matchesList"></div>
+  </div>
+
+<script>
+  let jobPosts = [];
+
+  window.addEventListener('DOMContentLoaded', async () => {
+    const jobSelect = document.getElementById('jobSelect');
+    const startButton = document.getElementById('startButton');
+    const errorMsg = document.getElementById('errorMsg');
+
+    try {
+      const res = await fetch('/api/employer-post', {
+        method: 'GET',
+        credentials: 'include'
+      });
+
+      if (!res.ok) throw new Error('Failed to load job posts');
+
+    const response = await res.json();
+    jobPosts = response.posts || [];
+
+    if (jobPosts.length === 0) {
+    jobSelect.innerHTML = '<option value="">No job posts found</option>';
+    return;
+    }
+
+
+      jobSelect.innerHTML = '<option value="">-- Select a Job Post --</option>';
+      jobPosts.forEach((post, idx) => {
+        const option = document.createElement('option');
+        option.value = idx;
+        option.textContent = post.jobTitle || `Job ${idx + 1}`;
+        jobSelect.appendChild(option);
+      });
+
+      jobSelect.addEventListener('change', () => {
+        startButton.disabled = jobSelect.value === '';
+      });
+
+    } catch (err) {
+      console.error('❌ Job post fetch error:', err);
+      errorMsg.textContent = err.message || 'Error loading job posts';
+    }
+  });
+
+  document.getElementById('startButton').addEventListener('click', async () => {
+    const jobSelect = document.getElementById('jobSelect');
+    const minScore = parseFloat(document.getElementById('minScore').value);
+    const maxDistance = parseFloat(document.getElementById('maxDistance').value);
+    const errorMsg = document.getElementById('errorMsg');
+    const loadingMsg = document.getElementById('loadingMsg');
+    const matchesList = document.getElementById('matchesList');
+
+    errorMsg.textContent = '';
+    loadingMsg.textContent = '';
+    matchesList.innerHTML = '';
+
+    if (isNaN(minScore) || minScore < 0 || minScore > 100) {
+      errorMsg.textContent = 'Enter a valid minimum match score between 0 and 100.';
+      return;
+    }
+
+    if (isNaN(maxDistance) || maxDistance <= 0) {
+      errorMsg.textContent = 'Enter a valid maximum distance in miles.';
+      return;
+    }
+
+    const selectedIndex = jobSelect.value;
+    if (selectedIndex === '') {
+      errorMsg.textContent = 'Please select a job post.';
+      return;
+    }
+
+    const post = jobPosts[selectedIndex];
+    const { requiredSkills = [], locationCoordinates, employerId, _id: jobPostId } = post;
+
+    if (!locationCoordinates || typeof locationCoordinates.lat !== 'number' || typeof locationCoordinates.lng !== 'number') {
+      errorMsg.textContent = 'Invalid job post location.';
+      return;
+    }
+
+    loadingMsg.textContent = '🔍 Finding matching candidates...';
+
+    const requestData = {
+      jobPostId,
+      requiredSkills,
+      employerLocation: locationCoordinates,
+      employerId,
+      maxDistance
+    };
+
+    try {
+      const res = await fetch('/api/matches', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(requestData)
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || 'Failed to fetch matches');
+      }
+
+      const { matches = [] } = await res.json();
+
+      const filtered = matches.filter(match =>
+        parseFloat(match.matchPercentage || match.qualificationScore || 0) >= minScore
+      );
+
+      if (filtered.length === 0) {
+        matchesList.innerHTML = '<p>No matching candidates found.</p>';
+        loadingMsg.textContent = '';
+        return;
+      }
+
+      const countInfo = document.createElement('p');
+      countInfo.style.fontWeight = 'bold';
+      countInfo.textContent = `✅ ${filtered.length} candidates matched your criteria.`;
+      matchesList.appendChild(countInfo);
+
+      for (const match of filtered) {
+        const resume = match.resume || match;
+        const {
+          fullName = 'N/A',
+          email = 'N/A',
+          phoneNumber = 'N/A',
+          education = [],
+          skills = [],
+          workExperience = [],
+          matchPercentage = match.matchPercentage || match.qualificationScore || 'N/A',
+          timestamp = match.timestamp || resume.timestamp || null,
+          _id: resumeId,
+          survey = {}
+        } = resume;
+
+        const minSalary = survey.minSalary || 'N/A';
+        const distanceKm = match.distanceKm;
+        const miles = typeof distanceKm === 'number' ? (distanceKm * 0.621371).toFixed(2) : 'N/A';
+        const submittedDate = timestamp ? new Date(timestamp).toLocaleString() : 'N/A';
+
+        const div = document.createElement('div');
+        div.className = 'match';
+        div.innerHTML = `
+          <strong>Name:</strong> ${fullName}<br>
+          <strong>Email:</strong> ${email}<br>
+          <strong>Phone:</strong> ${phoneNumber}<br>
+          <strong>Match Score:</strong> ${matchPercentage}%<br>
+          <strong>Min Salary Expectation:</strong> $${minSalary}<br>
+          <strong>Distance:</strong> ${Math.round(distanceKm * 0.6)} miles<br>
+          <strong>Submitted:</strong> ${submittedDate}<br>
+          <strong>Education:</strong>
+          <ul>${education.length ? education.map(e => `<li>${e}</li>`).join('') : '<li>N/A</li>'}</ul>
+          <strong>Skills:</strong>
+          <ul>${skills.length ? skills.map(s => `<li>${s}</li>`).join('') : '<li>N/A</li>'}</ul>
+          <strong>Work Experience:</strong>
+          <ul>
+            ${workExperience.length
+              ? workExperience.map(w => `
+                <li>
+                  <strong>${w.jobTitle || 'N/A'}</strong> at ${w.company || 'N/A'} (${w.duration || 'N/A'})<br>
+                  ${w.location ? `<em>Location:</em> ${w.location}<br>` : ''}
+                  ${w.responsibilities?.length
+                    ? `<em>Responsibilities:</em><ul>${w.responsibilities.map(r => `<li>${r}</li>`).join('')}</ul>`
+                    : ''}
+                  ${w.achievements?.length
+                    ? `<em>Achievements:</em><ul>${w.achievements.map(a => `<li>${a}</li>`).join('')}</ul>`
+                    : ''}
+                </li>
+              `).join('')
+              : '<li>N/A</li>'}
+          </ul>
+          ${resumeId ? `<button class="download-btn" onclick="window.open('/api/upload-resume/download/${resumeId}', '_blank')">Download Resume</button>` : ''}
+        `;
+        matchesList.appendChild(div);
+      }
+
+      loadingMsg.textContent = '';
+    } catch (err) {
+      console.error('❌ Match fetch error:', err);
+      errorMsg.textContent = `Error loading matches: ${err.message}`;
+      loadingMsg.textContent = '';
+    }
+  });
+</script>
+
+<footer>
+  &copy; 2025 Microwave Master. Contact: <a href="mailto:chrisvrfsoftware@gmail.com">chrisvrfsoftware@gmail.com</a>
+</footer>
+</body>
+</html>

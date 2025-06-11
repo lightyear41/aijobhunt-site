@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Job Seeker Sign In</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #c3ecb2, #7ddaff);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      color: #333;
+    }
+    .container {
+      background: white;
+      padding: 30px 40px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.15);
+      width: 320px;
+      text-align: center;
+    }
+    .signup-button {
+      background-color: #00bfa6;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      margin-bottom: 20px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.3s ease;
+    }
+    .signup-button:hover {
+      background-color: #009b89;
+    }
+    h2 {
+      margin-bottom: 25px;
+      color: #2b5876;
+    }
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 20px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+    button[type="submit"] {
+      width: 100%;
+      padding: 14px;
+      background-color: #2b5876;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 18px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.3s ease;
+    }
+    button[type="submit"]:hover {
+      background-color: #214b67;
+    }
+    .link {
+      margin-top: 15px;
+      display: block;
+      font-size: 14px;
+      color: #2b5876;
+      text-decoration: none;
+    }
+    .link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-ZC6LJFPV1F"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-ZC6LJFPV1F');
+</script>
+<body>
+  <div class="container">
+    <a href="/signup_employee.html"><button class="signup-button">Sign Up</button></a>
+    <h2>Job Seeker Sign In</h2>
+    <form id="signinForm">
+      <input type="email" id="email" placeholder="Email" required />
+      <input type="password" id="password" placeholder="Password" required />
+      <button type="submit">Sign In</button>
+    </form>
+    <a href="/home.html" class="link">Back to Home</a>
+  </div>
+
+  <script>
+    document.getElementById('signinForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        const res = await fetch('/api/signin-employee', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          localStorage.setItem('employeeName', data.name); // ✅ Save name to localStorage
+          window.location.href = "/home_employee.html";
+        } else {
+          alert(data.message || "Sign in failed");
+        }
+      } catch (err) {
+        console.error("Sign in error:", err);
+        alert("Error signing in");
+      }
+    });
+  </script>
+</body>
+</html>

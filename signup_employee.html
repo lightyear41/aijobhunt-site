@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Job Seeker Sign Up</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #c3ecb2, #7ddaff);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      color: #333;
+    }
+    .container {
+      background: white;
+      padding: 30px 40px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.15);
+      width: 340px;
+      text-align: center;
+    }
+    h2 {
+      margin-bottom: 25px;
+      color: #2b5876;
+    }
+    input[type="text"],
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+    button[type="submit"] {
+      width: 100%;
+      padding: 14px;
+      background-color: #2b5876;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 18px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.3s ease;
+    }
+    button[type="submit"]:hover {
+      background-color: #214b67;
+    }
+    .link {
+      margin-top: 15px;
+      display: block;
+      font-size: 14px;
+      color: #2b5876;
+      text-decoration: none;
+    }
+    .link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Create a Job Seeker Account</h2>
+    <form id="signupForm">
+      <input type="text" name="username" placeholder="Full Name" required />
+      <input type="email" name="email" placeholder="Email" required />
+      <input type="password" name="password" placeholder="Password" required />
+      <input type="password" name="confirmPassword" placeholder="Confirm Password" required />
+      <button type="submit">Sign Up</button>
+    </form>
+    <a href="/signin_employee.html" class="link">Already have an account? Sign in</a>
+    <a href="/index.html" class="link">Back to Home</a>
+  </div>
+
+<script>
+  document.getElementById('signupForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const form = e.target;
+    const username = form.username.value;
+    const email = form.email.value;
+    const password = form.password.value;
+    const confirmPassword = form.confirmPassword.value;
+
+    console.log("📥 Form submission:", { username, email, password, confirmPassword });
+
+    if (password !== confirmPassword) {
+      alert("Passwords do not match.");
+      console.warn("⚠️ Passwords did not match");
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/signup-employee', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email, password }),
+        credentials: 'include'
+      });
+
+      console.log("📡 Response status:", res.status);
+
+      const data = await res.json();
+      console.log("📦 Response data:", data);
+
+      if (!res.ok) {
+        alert(data.error || 'Signup failed.');
+        return;
+      }
+
+      sessionStorage.setItem('username', username);
+      window.location.href = "/eula.html";
+    } catch (err) {
+      alert("An error occurred. Please try again.");
+      console.error('❌ Signup error (client side):', err);
+    }
+  });
+</script>
+
+</body>
+</html>

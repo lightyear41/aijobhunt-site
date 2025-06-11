@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Job Preferences Survey</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+      background-color: #f9f9f9;
+    }
+
+    h1, h2 {
+      text-align: center;
+    }
+
+    #responseMsg {
+      margin: 0 auto 20px auto;
+      text-align: center;
+      font-weight: bold;
+      font-size: 1rem;
+      padding: 10px;
+      display: none;
+      border-radius: 5px;
+    }
+
+    #responseMsg.success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    #responseMsg.error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    form {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    input[type="text"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+
+    textarea {
+      resize: vertical;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 12px 20px;
+      font-size: 16px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <h1><strong>Smart Job Hunting</strong></h1>
+  <h2>Set Your Preferences</h2>
+
+  <div id="responseMsg"></div>
+
+  <form id="surveyForm">
+    <label for="jobTitles">Preferred Job Titles (comma separated)</label>
+    <input type="text" id="jobTitles" name="jobTitles" required />
+
+    <label for="minSalary">Minimum Salary ($)</label>
+    <input type="text" id="minSalary" name="minSalary" required />
+
+    <label for="locations">Preferred Locations (comma separated)</label>
+    <input type="text" id="locations" name="locations" required />
+
+    <label for="jobType">Work Type</label>
+    <select id="jobType" name="jobType" required>
+      <option value="remote">Remote</option>
+      <option value="hybrid">Hybrid</option>
+      <option value="onsite">Onsite</option>
+    </select>
+
+    <label for="excludeFilters">Exclude Filters (comma separated)</label>
+    <textarea id="excludeFilters" name="excludeFilters" rows="3"></textarea>
+
+    <button type="submit">Submit Preferences</button>
+  </form>
+
+  <script>
+    const form = document.getElementById('surveyForm');
+    const responseMsg = document.getElementById('responseMsg');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const jobTitles = document.getElementById('jobTitles').value.split(',').map(s => s.trim()).filter(Boolean);
+      const locations = document.getElementById('locations').value.split(',').map(s => s.trim()).filter(Boolean);
+      const excludeFilters = document.getElementById('excludeFilters').value.split(',').map(s => s.trim()).filter(Boolean);
+      const salaryInput = document.getElementById('minSalary').value.trim();
+      const minSalary = parseFloat(salaryInput);
+      const jobType = document.getElementById('jobType').value;
+
+      // Validate minimum salary
+      if (isNaN(minSalary) || minSalary <= 0) {
+        responseMsg.className = 'error';
+        responseMsg.textContent = 'Minimum salary must be a valid number greater than 0.';
+        responseMsg.style.display = 'block';
+        return;
+      }
+
+      if (locations.length === 0) {
+        responseMsg.className = 'error';
+        responseMsg.textContent = 'Please enter at least one valid location.';
+        responseMsg.style.display = 'block';
+        return;
+      }
+
+      const surveyData = {
+        jobTitles,
+        minSalary,
+        locations,
+        jobType,
+        excludeFilters
+      };
+
+      try {
+        const res = await fetch('/api/survey', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(surveyData)
+        });
+
+        const result = await res.json();
+
+        if (res.ok) {
+          console.log("Survey saved and linked to resume:", result.savedResumeId);
+
+          if (result.savedResumeId) {
+            sessionStorage.setItem('savedResumeId', result.savedResumeId);
+          }
+
+          responseMsg.className = 'success';
+          responseMsg.textContent = 'Preferences saved successfully! Redirecting...';
+          responseMsg.style.display = 'block';
+          form.reset();
+
+          setTimeout(() => {
+            window.location.href = 'home_employee.html?preferencesSaved=true';
+          }, 2500);
+        } else {
+          responseMsg.className = 'error';
+          responseMsg.textContent = result.message || 'Error saving preferences.';
+          responseMsg.style.display = 'block';
+        }
+      } catch (error) {
+        console.error('Fetch error:', error);
+        responseMsg.className = 'error';
+        responseMsg.textContent = 'Could not connect to backend.';
+        responseMsg.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Resume Upload</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      background-color: #f4f4f4;
+      color: #333;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    form {
+      max-width: 400px;
+      margin: 0 auto;
+      background: white;
+      padding: 1.5rem 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      text-align: left;
+    }
+    input[type="file"] {
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+    button[type="submit"] {
+      background-color: #007acc;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+      width: 100%;
+    }
+    button[type="submit"]:disabled {
+      background-color: #aaa;
+      cursor: not-allowed;
+    }
+    #uploadResult {
+      max-width: 600px;
+      margin: 1.5rem auto;
+      white-space: pre-wrap;
+      background-color: #fff;
+      padding: 1rem;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.9rem;
+      color: #222;
+      min-height: 100px;
+    }
+    #loading {
+      text-align: center;
+      color: #007acc;
+      font-weight: bold;
+      display: none;
+      margin-top: 1rem;
+    }
+    #successMessage {
+      text-align: center;
+      color: green;
+      font-weight: bold;
+      margin-top: 1rem;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h2>Upload Resume</h2>
+  <form id="uploadResumeForm" enctype="multipart/form-data" novalidate>
+    <label for="resumeFile">Select your resume (PDF only):</label>
+    <input type="file" id="resumeFile" name="resume" accept=".pdf" required />
+    <button type="submit" id="submitBtn">Upload Resume</button>
+  </form>
+
+  <div id="loading">Uploading... Please wait.</div>
+  <div id="successMessage">✅ Resume uploaded successfully! Redirecting to home...</div>
+  <pre id="uploadResult"></pre>
+
+  <script>
+    const form = document.getElementById('uploadResumeForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const loading = document.getElementById('loading');
+    const result = document.getElementById('uploadResult');
+    const successMessage = document.getElementById('successMessage');
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+
+      result.textContent = '';
+      loading.style.display = 'block';
+      successMessage.style.display = 'none';
+      submitBtn.disabled = true;
+
+      const formData = new FormData(form);
+
+      try {
+        const res = await fetch('/api/resume', {
+          method: 'POST',
+          body: formData,
+          credentials: 'include'
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data?.parsedResume) {
+          console.log("✅ Resume upload response:", data);
+          result.textContent = JSON.stringify(data.parsedResume, null, 2);
+          successMessage.style.display = 'block';
+
+          await fetchResumes();
+
+          // Redirect after delay
+          setTimeout(() => {
+            window.location.href = 'home_employee.html';
+          }, 2000);
+        } else {
+          const errorMessage = data?.error || data?.message || 'Server returned an error';
+          console.error("❌ Upload failed:", errorMessage);
+          result.textContent = 'Error: ' + errorMessage;
+        }
+      } catch (err) {
+        console.error("❌ Upload error:", err);
+        result.textContent = '❌ Network or server error: ' + (err.message || 'Unknown error');
+      } finally {
+        loading.style.display = 'none';
+        submitBtn.disabled = false;
+      }
+    });
+
+    async function fetchResumes() {
+      try {
+        const res = await fetch('http://167.99.237.153:3000/api/resumes', {
+          credentials: 'include'
+        });
+
+        const data = await res.json();
+        console.log("📄 Resumes fetched after upload:", data);
+
+        if (Array.isArray(data)) {
+          result.textContent += '\n\nFetched Resumes:\n' + JSON.stringify(data, null, 2);
+        } else {
+          result.textContent += '\n\nNo resumes found.';
+        }
+      } catch (err) {
+        console.error("❌ Error fetching resumes:", err);
+        result.textContent += '\n\n❌ Error fetching resumes: ' + err.message;
+      }
+    }
+  </script>
+</body>
+</html>

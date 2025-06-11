@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Employer Job Post</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: radial-gradient(circle at center, #001f3f, #000814);
+      display: flex;
+      justify-content: center;
+    }
+
+    .form-container {
+      width: 95vw;
+      max-width: 900px;
+      min-height: 90vh;
+      background: rgba(0, 0, 50, 0.95);
+      border: 2px solid #00FFFF;
+      border-radius: 16px;
+      box-shadow: 0 0 20px #00FFFF;
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 24px;
+      color: #00FFFF;
+      text-shadow: 0 0 5px #00FFFF;
+      margin-bottom: 10px;
+    }
+
+    form {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-fields {
+      flex-grow: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding-right: 6px;
+      align-items: center;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      max-width: 700px;
+    }
+
+    label {
+      font-size: 13px;
+      color: #cccccc;
+      margin-bottom: 4px;
+    }
+
+    input, textarea, select {
+      padding: 8px;
+      font-size: 14px;
+      border: none;
+      border-radius: 6px;
+      background: #001f3f;
+      color: white;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 50px;
+      max-height: 150px;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      outline: 2px solid #00FFFF;
+    }
+
+    button {
+      padding: 10px;
+      font-size: 16px;
+      background-color: transparent;
+      border: 2px solid #00FFFF;
+      border-radius: 8px;
+      color: #00FFFF;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      margin-top: 10px;
+      align-self: center;
+      width: 200px;
+    }
+
+    button:hover {
+      background-color: #00FFFF;
+      color: #001f3f;
+      box-shadow: 0 0 10px #00FFFF;
+    }
+
+    #errorMessage {
+      color: #FF5555;
+      background-color: #330000;
+      border: 1px solid #FF8888;
+      border-radius: 6px;
+      padding: 6px 10px;
+      margin: 8px 0;
+      font-size: 14px;
+      display: none;
+      text-align: center;
+    }
+
+    #toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 12px 16px;
+      background: #00AA88;
+      color: white;
+      font-weight: bold;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #00FFCC;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+      z-index: 9999;
+    }
+
+    #toast.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    footer {
+      text-align: center;
+      font-size: 12px;
+      color: #cccccc;
+      padding-top: 8px;
+      border-top: 1px solid #00FFFF;
+      margin-top: 8px;
+    }
+
+    footer a {
+      color: #00FFFF;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h1>Employer Job Post</h1>
+    <form id="employerForm">
+      <div id="errorMessage"></div>
+      <div class="form-fields">
+        <div class="input-group">
+          <label for="jobTitle">Job Title:</label>
+          <input type="text" name="jobTitle" id="jobTitle" required />
+        </div>
+
+        <div class="input-group">
+          <label for="jobDescription">Job Description:</label>
+          <textarea name="jobDescription" id="jobDescription" required></textarea>
+        </div>
+
+        <div class="input-group">
+          <label for="requiredSkills">Required Skills (comma-separated):</label>
+          <input type="text" name="requiredSkills" id="requiredSkills" required />
+        </div>
+
+        <div class="input-group">
+          <label for="location">Job Location:</label>
+          <input type="text" name="location" id="location" required />
+        </div>
+
+        <div class="input-group">
+          <label for="salary">Maximum Salary (USD):</label>
+          <input type="number" name="salary" id="salary" min="0" step="any" required />
+        </div>
+
+        <div class="input-group">
+          <label for="jobType">Job Type:</label>
+          <select name="jobType" id="jobType" required>
+            <option value="">-- Select Job Type --</option>
+            <option value="remote">Remote</option>
+            <option value="hybrid">Hybrid</option>
+            <option value="onsite">Onsite</option>
+          </select>
+        </div>
+
+        <div class="input-group">
+          <label for="expectedQualifications">Expected Qualifications (comma-separated):</label>
+          <input type="text" name="expectedQualifications" id="expectedQualifications" />
+        </div>
+      </div>
+
+      <button type="submit">Submit Job Post</button>
+    </form>
+
+    <footer>
+      &copy; 2025 Microwave Master All rights reserved. |
+      Contact: <a href="mailto:chrisvrfsoftware@gmail.com">chrisvrfsoftware@gmail.com</a>
+    </footer>
+  </div>
+
+  <div id="toast">Job posted successfully!</div>
+
+  <script>
+    const toast = document.getElementById("toast");
+    const errorMessage = document.getElementById("errorMessage");
+
+    function showSuccessToast() {
+      toast.className = "show";
+      setTimeout(() => {
+        toast.classList.remove("show");
+        window.location.href = "home_employer.html";
+      }, 3000);
+    }
+
+    function showError(message) {
+      errorMessage.textContent = message;
+      errorMessage.style.display = "block";
+    }
+
+    document.getElementById('employerForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      errorMessage.style.display = "none";
+
+      const form = e.target;
+
+      const expectedQualificationsInput = form.expectedQualifications.value;
+      const expectedQualifications = expectedQualificationsInput
+        ? expectedQualificationsInput.split(',').map(s => s.trim()).filter(Boolean)
+        : [];
+
+      const salary = parseFloat(form.salary.value);
+      if (isNaN(salary)) {
+        showError('Please enter a valid number for salary.');
+        return;
+      }
+
+      const data = {
+        jobTitle: form.jobTitle.value.trim(),
+        jobDescription: form.jobDescription.value.trim(),
+        requiredSkills: form.requiredSkills.value.split(',').map(s => s.trim()).filter(Boolean),
+        location: form.location.value.trim(),
+        salary,
+        jobType: form.jobType.value.trim().toLowerCase(),
+        expectedQualifications
+      };
+
+      try {
+        const res = await fetch('/api/employer-post', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify(data)
+        });
+
+        const responseData = await res.json();
+        if (!res.ok) throw new Error(responseData.message || 'Post failed');
+
+        showSuccessToast();
+      } catch (err) {
+        console.error('❌ Error submitting form:', err);
+        showError('Failed to submit post: ' + err.message);
+      }
+    });
+  </script>
+</body>
+</html>
