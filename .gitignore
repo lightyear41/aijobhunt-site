@@ -1,0 +1,21 @@
+# Dependency directory
+node_modules/
+
+# Environment variable files
+.env
+
+# Log files
+*.log
+logs/
+npm-debug.log*
+
+# System/OS files
+.DS_Store
+Thumbs.db
+
+# Build output (if using any bundler or frontend build)
+dist/
+build/
+
+# Uploaded files (if any)
+uploads/
