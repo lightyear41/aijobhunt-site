@@ -55,6 +55,7 @@ app.use(express.static(frontendDir));
 console.log("🛠️ Setting up middleware: JSON, URL Encoded, Sessions, and CORS");
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'resume-frontend')));
 
 // ✅ UPDATED: Allowed origins including www.aijobhunt.org
 const allowedOrigins = [
@@ -609,7 +610,6 @@ app.post('/api/matches', async (req, res) => {
         continue;
       }
 
-      // Salary filtering
       const candidateExpectedSalary = parseFloat(survey.minSalary);
       const maxSalary = parseFloat(employerMaxSalary);
       if (!isNaN(maxSalary) && !isNaN(candidateExpectedSalary)) {
@@ -619,7 +619,6 @@ app.post('/api/matches', async (req, res) => {
         }
       }
 
-      // Job type matching
       const candidateJobType = survey.jobType;
       if (!candidateJobType) {
         console.log('⚠️ Candidate missing jobType, skipping');
@@ -636,7 +635,6 @@ app.post('/api/matches', async (req, res) => {
         continue;
       }
 
-      // Job title fuzzy match
       const seekerJobTitles = (survey.jobTitles || []).map(t => t.toLowerCase());
       const titleMatch = seekerJobTitles.some(t =>
         fuzzyMatch(jobTitle.toLowerCase(), t) || fuzzyMatch(t, jobTitle.toLowerCase())
@@ -646,7 +644,6 @@ app.post('/api/matches', async (req, res) => {
         continue;
       }
 
-      // Location check
       const locCoord = survey.locationCoordinates?.[0];
       if (!locCoord || typeof locCoord.lat !== 'number' || typeof locCoord.lng !== 'number') {
         console.log('⚠️ No valid locationCoordinates, skipping');
@@ -660,7 +657,6 @@ app.post('/api/matches', async (req, res) => {
         continue;
       }
 
-      // Skills
       const candidateSkills = (candidate.skills || []).map(s => s.toLowerCase());
       const hiddenSoftSkills = (candidate.hiddenSoftSkills || []).map(s => s.toLowerCase());
 
@@ -699,7 +695,7 @@ app.post('/api/matches', async (req, res) => {
 
       const educationScore = educationMatch ? 1 : 0;
 
-      const totalWeight = 0.7 + 0.3;
+      const totalWeight = 1.0;
       const combinedScore = ((skillScore * 0.7) + (educationScore * 0.3)) / totalWeight;
 
       if (combinedScore === 0) {
@@ -727,6 +723,7 @@ app.post('/api/matches', async (req, res) => {
     res.status(500).json({ message: 'Server error finding matches', error: err.message, stack: err.stack });
   }
 });
+
 
 
 
